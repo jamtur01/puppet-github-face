@@ -31,9 +31,8 @@ Puppet::Face.define(:github, '0.0.1') do
   option "--branch BRANCH" do
     desc "The branch of the module. Defaults to master"
     before_action do |action, args, options|
-      unless options[:branch]
-
-      end
+      #unless options[:branch]
+    end
   end
 
   action :install do
@@ -77,7 +76,7 @@ Puppet::Face.define(:github, '0.0.1') do
   end
 
   def move_module
-    system "mv #{temp_clone_path} #{File.join(@install_path, @module)}", :cwd => tmpdir
+    system "mv #{temp_clone_path} #{File.join(@install_path, @module)}"
   end
 
   def clear_existing_files(module_path)
@@ -86,9 +85,9 @@ Puppet::Face.define(:github, '0.0.1') do
   end
 
   def clone_module
-    system "rm -rf #{temp_clone_path}", :cwd => tmpdir) if File.exists?(File.join(tmpdir, temp_clone_path))
-    system "git clone #{github_uri} #{temp_clone_path}", :cwd => tmpdir)
-    system "git checkout #{@branch}", :cwd => File.join(tmpdir, temp_clone_path))
-    system "rm -rf .git", :cwd => File.join(tmpdir, temp_clone_path))
+    system "rm -rf #{temp_clone_path}" if File.exists?(File.join(tmpdir, temp_clone_path))
+    system "git clone #{github_uri} #{temp_clone_path}"
+    system "git checkout #{@branch}"
+    system "rm -rf .git"
   end
 end
