@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "faces-github-modules/version"
+require "puppet-github-face/version"
 
 Gem::Specification.new do |s|
-  s.name              = "faces-github-modules"
-  s.version           = Faces::GithubModules::VERSION
+  s.name              = "puppet-github-face"
+  s.version           = Puppet::GithubFace::VERSION
   s.platform          = Gem::Platform::RUBY
   s.has_rdoc          = false
   s.extra_rdoc_files  = ["LICENSE" ]
   s.authors           = ["James Turnbull"]
   s.email             = ["james@lovedthanlost.net"]
-  s.homepage          = "https://github.com/jamtur01/faces-github-modules"
-  s.summary           = %q{A Puppet Face for managing Github Puppet Module}
+  s.homepage          = "https://github.com/jamtur01/puppet-github-face"
+  s.summary           = %q{A Puppet Face for managing Puppet modules on Github}
   s.description       = s.summary
   s.files             = `git ls-files`.split("\n")
   s.test_files        = `git ls-files -- {test,spec,features}/*`.split("\n")

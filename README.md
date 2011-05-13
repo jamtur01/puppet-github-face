@@ -1,5 +1,5 @@
-faces-github-modules
-====================
+puppet-github-face
+==================
 
 Description
 -----------
@@ -22,7 +22,7 @@ Installation
 
 As yet not packaged as a Gem.
 
-    $ gem install faces-github-modules
+    $ gem install puppet-github-face
 
 Usage
 -----

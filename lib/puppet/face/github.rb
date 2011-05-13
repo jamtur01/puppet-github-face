@@ -1,11 +1,9 @@
-require 'puppet'
 require 'puppet/face'
-require 'pp'
 
 Puppet::Face.define(:github, '0.0.1') do
   summary "Manage Puppet modules located on GitHub"
-  #copyright "James Turnbull", 2011
-  #license   "Apache 2 license; see LICENSE"
+  copyright "James Turnbull", 2011
+  license   "Apache 2 license; see LICENSE"
 
   option "--ssh" do
     desc "Use SSH to connect to GitHub"
