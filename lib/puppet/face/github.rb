@@ -1,3 +1,4 @@
+require 'puppet'
 require 'puppet/face'
 require 'net/http'
 require 'net/https'

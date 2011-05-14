@@ -20,7 +20,8 @@ Requirements
 Installation
 ------------
 
-    $ gem install puppet-github-face
+Install puppet-github-face as a module in your Puppet master's module
+path.
 
 Usage
 -----
