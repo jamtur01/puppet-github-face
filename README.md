@@ -7,7 +7,7 @@ Description
 A Puppet Face for managing Puppet modules located on GitHub
 
 It's heavily based on Jesse Newland's knife-github-cookbooks Knife
-plugin (https://github.com/websterclay/knife-github-cookbooks). He's a
+plugin (https://github.com/websterclay/knife-github-cookbooks). Jesse's a
 cool guy and you should check out his other work like Rump
 (https://github.com/railsmachine/rump).
 
@@ -20,8 +20,6 @@ Requirements
 Installation
 ------------
 
-As yet not packaged as a Gem.
-
     $ gem install puppet-github-face
 
 Usage
@@ -29,18 +27,25 @@ Usage
 
 ### Installing modules
 
-Say you wanted to install the `yum` modules located at
+Say you wanted to install the `yum` module located at
 https://github.com/module/yum. To do so, you'd run the following command:
 
-    $ puppet github install module/yum
+    $ puppet github install --user module --repo yum
 
 The repo at https://github.com/modules/yum will be cloned into a temporary
-directory, moved into your module path.
+directory and then moved into your module path.  Any existing modules of
+the same name will be DELETED.
 
-By default, the public `git://` URI will be used. To clone a private repo via
-the `git@` URI, pass the `--ssh` option:
+### Comparing modules
 
-    $ puppet github install secret/secret_module --ssh
+Say you want to compare your installed `yum` module with the upstream
+GitHub module.  To do so, you can run the following command.
+
+    $ puppet github compare --user module --repo yum
+
+If the `yum` module is installed locally it'll compare it with the
+version on GitHub and return a unified diff output of the changes in the
+module.
 
 Conventions
 -----------

@@ -1,91 +1,125 @@
 require 'puppet/face'
+require 'net/http'
+require 'net/https'
+require 'uri'
 
 Puppet::Face.define(:github, '0.0.1') do
   summary "Manage Puppet modules located on GitHub"
   copyright "James Turnbull", 2011
   license   "Apache 2 license; see LICENSE"
 
-  option "--ssh" do
-    desc "Use SSH to connect to GitHub"
-  end
-
-  option "--github_user USER" do
+  option "--user USER" do
     desc "The GitHub user"
   end
 
-  option "--github_repo REPO" do
+  option "--repo REPO" do
     desc "The GitHub repo containing the Puppet module"
   end
 
-  option "--module_path PATH:PATH" do
+  option "--path PATH:PATH" do
     desc "A colon-separated list of paths to your modules"
-    before_action do |action, args, options|
-      unless options[:module_path]
-        options[:module_path] = Puppet.settings[:modulepath]
-      end
-    end
   end
 
   option "--branch BRANCH" do
     desc "The branch of the module. Defaults to master"
-    before_action do |action, args, options|
-      #unless options[:branch]
-    end
   end
 
   action :install do
     summary "Install a Puppet module from GitHub"
     description <<-EOT
       Install a Puppet module from a GitHub repository. It
-      connections to GitHub and installs the modules specified 
+      connects to GitHub and installs the modules specified 
       into the Puppet module path.
     EOT
 
     when_invoked do |options|
-      @user = options[:github_user]
-      @repo = options[:github_repo]
-      @branch = options[:branch]
-      @module_path = options[:module_path]
-      @install_path = @module_path.first
-      @module = @repo.gsub(/[_-]?puppet[-_]?/, '').gsub(/[_-]?module[-_]?/, '')
+      config(options)
 
       Puppet.notice "Installing Puppet module #{@module} from #{github_uri}"
 
       clone_module
-      clear_existing_files(File.join(@install_path, @module))
+      clear_existing_files
       move_module
     end
   end
 
-  def github_uri
-    if @ssh || @user == ENV['USER']
-      "git@github.com:#{@user}/#{@repo}.git"
-    else
-      "git://github.com/#{@user}/#{@repo}.git"
+  action :compare do
+    summary "Compare a currently installed moduled to its current GitHub state"
+    description <<-EOT
+      Compare a currently installed Puppet module to its GitHub parent repository. It
+      connects to GitHub and compares the SHA of an currently installed module to its
+      parent and returns the diff.
+    EOT
+
+    when_invoked do |options|
+      config(options)
+      check_module
+      get_sha
+      compare_module
     end
   end
 
-  def temp_clone_path
-    "_tmp_puppet_#{@module}"
+  def config(options)
+    @user = options[:user]
+    @repo = options[:repo]
+    @branch = 'master' unless options.has_key?(:branch)
+    path = Puppet.settings[:modulepath] unless options.has_key?(:path)
+    @install_path = path.split(':')[0]
+    @module = @repo.gsub(/[_-]?puppet[-_]?/, '').gsub(/[_-]?module[-_]?/, '')
   end
 
-  def tmpdir
-    ENV['TMPDIR']
+  def github_uri
+    "git://github.com/#{@user}/#{@repo}.git"
+  end
+
+  def compare_uri
+    "https://github.com/#{@user}/#{@repo}/compare/#{get_sha}...#{@branch}.diff"
+  end
+
+  def get_sha
+    `cd #{module_path}; git rev-parse #{@branch}`.chomp
+  end
+
+  def module_path
+    File.join(@install_path, @module)
+  end
+
+  def tmppath
+    File.join(ENV['TMPDIR'] || "/tmp", "_tmp_puppet_#{@module}")
   end
 
   def move_module
-    system "mv #{temp_clone_path} #{File.join(@install_path, @module)}"
+    `mv #{tmppath} #{module_path}`
   end
 
-  def clear_existing_files(module_path)
-    Puppet.notice "Removing pre-existing version."
-    system "rm -r #{module_path}" if File.directory?(module_path)
+  def clear_existing_files
+    Puppet.notice "Removing pre-existing version of #{@module}"
+    `rm -rf #{module_path}` if File.directory?(module_path)
   end
 
   def clone_module
-    system "rm -rf #{temp_clone_path}" if File.exists?(File.join(tmpdir, temp_clone_path))
-    system "git clone #{github_uri} #{temp_clone_path}"
-    system "git checkout #{@branch}"
-    system "rm -rf .git"
+    `rm -rf #{tmppath}` if File.exists?(tmppath)
+    `git clone #{github_uri} #{tmppath}`
+    `cd #{tmppath}; git checkout #{@branch}`
+  end
+
+  def check_module
+    fail "There is no #{@module} module installed at #{@install_path}" unless File.exists?(module_path)
+  end
+
+  def compare_module
+    Puppet.notice "Comparing local Puppet module #{@module} to #{github_uri}"
+    uri = URI.parse(compare_uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = Net::HTTP::Get.new(uri.path)
+    contents = http.request(request).body
+    if contents.empty?
+      Puppet.notice "Local Puppet module #{@module} is up to date with #{github_uri}"
+    else
+      Puppet.notice "Displaying diff of local and remote #{@module} modules - use puppet github install to update."
+      puts contents
+    end
   end
 end
